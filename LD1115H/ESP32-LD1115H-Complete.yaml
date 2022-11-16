@@ -152,7 +152,7 @@ number:
 sensor:
   #add by zhou begin bh1750
   - platform: bh1750
-    name: ${upper_devicename} Illuminance"
+    name: ${upper_devicename} Illuminance
     address: 0x23
     update_interval: 60s    
   #add by zhou end
