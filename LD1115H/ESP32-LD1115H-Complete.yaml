@@ -1,6 +1,6 @@
 substitutions:
-  devicename: "esp-radar" #Rename the device what you want.
-  upper_devicename: ESP Radar #Rename the device what you want.
+  devicename: "presence-espcem5855h-03" #Rename the device what you want.
+  upper_devicename: mRadar03 #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1115H Initial Setting
@@ -64,6 +64,13 @@ globals:
     type: bool
     restore_value: no
     initial_value: "false"
+# add by zhou begin used by bh1750
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  scan: true
+  id: bus_a
+# add by zhou end      
 status_led:
   pin:
     number: GPIO2 #ESP32 OnBroad LED
@@ -143,6 +150,13 @@ number:
     max_value: 10
     step: 0.5
 sensor:
+  #add by zhou begin bh1750
+  - platform: bh1750
+    name: ${upper_devicename} Illuminance"
+    address: 0x23
+    update_interval: 60s    
+  #add by zhou end
+        
   - platform: wifi_signal
     name: ${upper_devicename} WiFi Signal
     update_interval: 60s
