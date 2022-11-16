@@ -27,7 +27,7 @@ external_components:
       url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
     components: [ serial ]
 logger:
-  level: DEBUG  #You Can Use "INFO" Level
+  level: info  #You Can Use "INFO" Level
   baud_rate: 0
 api:
 ota:
