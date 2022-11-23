@@ -1,8 +1,8 @@
 
 #esp8266+cem5855H+bh1750
 substitutions:
-  devicename: "presence-espcem5855h-03" #Rename the device what you want.
-  upper_devicename: mRadar03 #Rename the device what you want.
+  devicename: "presence-espcem5855h-07" #Rename the device what you want.
+  upper_devicename: mRadar07 #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1115H Initial Setting
@@ -28,7 +28,7 @@ external_components:
       url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
     components: [ serial ]
 logger:
-  level: info  #You Can Use "INFO" Level
+  level: debug  #You Can Use "INFO" Level
   baud_rate: 0
 api:
 ota:
@@ -41,8 +41,8 @@ wifi:
 
 uart:
   id: LD1115H_UART_BUS
-  rx_pin: tx
-  tx_pin: rx 
+  rx_pin: GPIO3
+  tx_pin: GPIO1
   baud_rate: 115200
   data_bits: 8
   stop_bits: 1
@@ -252,3 +252,13 @@ binary_sensor:
     name: ${upper_devicename} LD1115H Movement
     id: LD1115H_Mov_Binary
     device_class: motion
+
+  #add by zhou begin: presence 高电平输出  
+  - platform: gpio
+    id: human_presence_motion
+    pin: 
+      number: GPIO12 #D6 因为D0 pin 焊坏了，所以借D6 pin
+#      mode: INPUT_PULLDOWN  #只有D0能 PULLDOWN
+    name: ${upper_devicename}human_presence
+    device_class: presence
+#add by zhou end 
