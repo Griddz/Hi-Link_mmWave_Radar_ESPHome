@@ -238,18 +238,18 @@ text_sensor:
   - platform: wifi_info
     ip_address:
       name: ${upper_devicename} IP Address
-    ssid:
-      name: ${upper_devicename} SSID
-    bssid:
-      name: ${upper_devicename} BSSID
-    mac_address:
-      name: ${upper_devicename} Mac Address
+    # ssid:
+    #   name: ${upper_devicename} SSID
+    # bssid:
+    #   name: ${upper_devicename} BSSID
+    # mac_address:
+    #   name: ${upper_devicename} Mac Address
   - platform: serial
     uart_id: LD1125H_UART_BUS
     name: ${upper_devicename} LD1125H UART Text
     id: LD1125H_UART_Text
     icon: "mdi:format-text"
-    internal: False #If Don't Want to See UART Receive Data, Set To True
+    internal: True #If Don't Want to See UART Receive Data, Set To True
     on_value:
       lambda: |-
         if (id(LD1125H_UART_Text).state.substr(0,3) == "occ") {
