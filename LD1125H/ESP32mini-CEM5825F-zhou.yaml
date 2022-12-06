@@ -249,7 +249,7 @@ text_sensor:
     name: ${upper_devicename} LD1125H UART Text
     id: LD1125H_UART_Text
     icon: "mdi:format-text"
-    internal: True #If Don't Want to See UART Receive Data, Set To True
+    internal: false #If Don't Want to See UART Receive Data, Set To True
     on_value:
       lambda: |-
         if (id(LD1125H_UART_Text).state.substr(0,3) == "occ") {
@@ -309,3 +309,15 @@ binary_sensor:
 button: 
   - platform: restart
     name: ${upper_devicename}Restart      
+#设置测试模式开关，为了获取雷达信号强度值。turn-on 进入测试模式；turn-off 关闭测试模式。    
+switch:
+  - platform: template
+    optimistic: True
+    name: ${upper_devicename}Test-Mode
+    id: test_mode
+    turn_on_action: 
+    - uart.write: "test_mode=1\r\n"
+    turn_off_action: 
+    - uart.write: "test_mode=0\r\n"
+
+        
