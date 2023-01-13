@@ -1,7 +1,7 @@
-#这个是Esp32 PCB A款+雷达CEM5825F+光感BH1750+红外ASM312+AHT21温湿度 
+#这个是Esp32 PCB A款+雷达CEM5825F+光感BH1750+红外ASM312+AHT21温湿度  
 substitutions:
-  devicename: presence-espcem5825f-11 #Rename the device what you want.
-  upper_devicename: mRadar11- #Rename the device what you want.
+  devicename: presence-espcem5825f-18 #Rename the device what you want.
+  upper_devicename: mRadar18- #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1125H Initial Setting
@@ -28,7 +28,7 @@ esphome:
             std::string rmaxst = "rmax=" + str_sprintf("%.1f",id(LD1125H_rmax).state) +"\r\n";
             return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
 esp32:
-  board: nodemcu-32s
+  board: esp32dev
   framework:
     type: arduino
 
@@ -82,7 +82,7 @@ i2c:
   sda: GPIO21
   scl: GPIO22
   scan: true
-  id: bus_a
+
 # add by zhou end       
 # status_led:
 #   pin:
@@ -199,20 +199,27 @@ number:
 
 sensor:    
   #add by zhou begin bh1750
-  # - platform: bh1750
-  #   name: ${upper_devicename}Illuminance
-  #   address: 0x23
-  #   i2c_id: bus_a
-  #   update_interval: 10s    
+  - platform: bh1750
+    name: ${upper_devicename}Illuminance
+    address: 0x23
+    # filters:
+    #   - calibrate_linear:
+    #       # Map 0.0 (from sensor) to 0.0 (true value)
+    #       - 0.0 -> 0.0
+    #       - 0.1 -> 7.6
+    #       - 4.6 -> 80.5
+    #       - 8.4 -> 136.1
+    update_interval: 10s    
+    
   - platform: aht10
     temperature:
       name: ${upper_devicename}temperature
-      id: wendu
+      
       filters:
         - lambda: return x - 0.0;
     humidity:
       name: ${upper_devicename}humidity
-      id: shidu
+     
       filters:
         - lambda: return x + 0.0;
     update_interval: 10s
