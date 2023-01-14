@@ -177,7 +177,7 @@ number:
               std::string rmaxst = "rmax=" + str_sprintf("%.1f",x) +"\r\n";
               return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
   - platform: template
-    name: ${upper_devicename} LD1125H Clearence Time
+    name: ${upper_devicename}Clearence Time
     id: LD1125H_Clear_Time
     icon: "mdi:cogs"
     optimistic: true
@@ -187,7 +187,7 @@ number:
     max_value: 20
     step: 0.5
   - platform: template
-    name: ${upper_devicename} LD1125H Movement Time
+    name: ${upper_devicename}Movement Time
     id: LD1125H_Mov_Time
     icon: "mdi:cogs"
     optimistic: true
@@ -223,17 +223,13 @@ sensor:
       filters:
         - lambda: return x + 0.0;
     update_interval: 10s
-  - platform: wifi_signal
-    name: ${upper_devicename} WiFi Signal
-    update_interval: 60s
 
-  - platform: uptime
-    name: ${upper_devicename} Uptime    
+
   - platform: wifi_signal
     name: ${upper_devicename} WiFi Signal
     update_interval: 60s
-  - platform: uptime
-    name: ${upper_devicename} Uptime
+  # - platform: uptime
+  #   name: ${upper_devicename} Uptime
 # add and change by zhou begin:  静止目标距离和运动目标距离分别在前端展示
   - platform: template
     name: ${upper_devicename}Moving Target Distance
@@ -242,9 +238,9 @@ sensor:
     unit_of_measurement: "m"
     accuracy_decimals: 2
     filters:    # Use Fliter To Debounce
-    - sliding_window_moving_average:
-        window_size: 8
-        send_every: 2
+    # - sliding_window_moving_average:
+    #     window_size: 8
+    #     send_every: 2
     - heartbeat: 0.2s
   - platform: template
     name: ${upper_devicename}Still Target Distance
@@ -253,9 +249,9 @@ sensor:
     unit_of_measurement: "m"
     accuracy_decimals: 2
     filters:    # Use Fliter To Debounce
-    - sliding_window_moving_average:
-        window_size: 8
-        send_every: 2
+    # - sliding_window_moving_average:
+    #     window_size: 8
+    #     send_every: 2
     - heartbeat: 0.2s    
 # # add and change by zhou end:     
 text_sensor:
@@ -270,7 +266,7 @@ text_sensor:
     #   name: ${upper_devicename} Mac Address
   - platform: serial
     uart_id: LD1125H_UART_BUS
-    name: ${upper_devicename} LD1125H UART Text
+    name: ${upper_devicename}UART Text
     id: LD1125H_UART_Text
     icon: "mdi:format-text"
     internal: false #If Don't Want to See UART Receive Data, Set To True
@@ -310,19 +306,31 @@ text_sensor:
             id(LD1125H_Clearence_Status) = false;
           }
         }
+        else if (id(LD1125H_UART_Text).state.substr(0,4) == "null") {
+          id(LD1125H_Moving_Distance).publish_state(atof("0.0"));
+          id(LD1125H_Still_Distance).publish_state(atof("0.0"));          
+          
+    
+          id(LD1125H_MovOcc_Binary).publish_state(false);
+          
+          id(LD1125H_Mov_Binary).publish_state(false);
+         
+          }      
+          
+        
   - platform: template
-    name: ${upper_devicename} LD1125H Occupancy Status
+    name: ${upper_devicename}Occupancy Status
     id: LD1125H_Occupancy
     icon: "mdi:motion-sensor"
 binary_sensor:
   - platform: status
     name: ${upper_devicename} Status
   - platform: template
-    name: ${upper_devicename} LD1125H Occupancy or Movement
+    name: ${upper_devicename}OccOrMov
     id: LD1125H_MovOcc_Binary
     device_class: occupancy
   - platform: template
-    name: ${upper_devicename} LD1125H Movement
+    name: ${upper_devicename}Movement
     id: LD1125H_Mov_Binary
     device_class: motion
   - platform: gpio
