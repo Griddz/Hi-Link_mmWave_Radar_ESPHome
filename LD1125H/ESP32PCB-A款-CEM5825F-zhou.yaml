@@ -1,7 +1,7 @@
 #这个是Esp32 PCB A款+雷达CEM5825F+光感BH1750+红外ASM312+AHT21温湿度  
 substitutions:
-  devicename: presence-espcem5825f-18 #Rename the device what you want.
-  upper_devicename: mRadar18- #Rename the device what you want.
+  devicename: presence-espcem5825f-28 #Rename the device what you want.
+  upper_devicename: mRadar28- #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1125H Initial Setting
@@ -27,6 +27,8 @@ esphome:
           data: !lambda |-
             std::string rmaxst = "rmax=" + str_sprintf("%.1f",id(LD1125H_rmax).state) +"\r\n";
             return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
+      - delay: 100ms      
+      - uart.write: "save\r\n"                  
 esp32:
   board: esp32dev
   framework:
@@ -38,7 +40,7 @@ external_components:
       url: https://github.com/ssieb/custom_components #Thanks for @ssieb components.
     components: [ serial ]
 logger:
-  level: DEBUG  #You Can Use "INFO" Level
+  level: debug #You Can Use "INFO","VERY_VERBOSE" Level
   baud_rate: 0
 api:
 ota:
@@ -48,6 +50,7 @@ wifi:
   power_save_mode: LIGHT
   ap:
     ssid: ${upper_devicename}CEM5825F  Hotspot
+captive_portal:    
 uart:
   id: LD1125H_UART_BUS
   rx_pin: GPIO16  #For ESP32, you can use any pin, Recommend Use UART_2, Don't use UART_0, It might Cause Boot Fail or System Hang
@@ -88,31 +91,32 @@ i2c:
 #   pin:
 #     number: GPIO2 #ESP32 OnBroad LED
 #     inverted: false
-#web_server:   #Avoid Using Web Server To Prevent Hang
+# web_server:   #Avoid Using Web Server To Prevent Hang
 #  port: 80
-interval:
-  - interval: 1s #Clearance Scan Time
-    setup_priority: -200
-    then:
-      lambda: |-
-        if ((time(NULL)-id(LD1125H_Last_Time))>id(LD1125H_Clear_Time).state) {
-          if ((id(LD1125H_Clearence_Status) == false) || (id(LD1125H_Occupancy).state != "Clearance")) {
-            id(LD1125H_Occupancy).publish_state("Clearance");
-            id(LD1125H_Clearence_Status) = true;
-          }
-          if (id(LD1125H_MovOcc_Binary).state == true) {
-            id(LD1125H_MovOcc_Binary).publish_state(false);
-          }
-          if (id(LD1125H_Mov_Binary).state == true) {
-            id(LD1125H_Mov_Binary).publish_state(false);
-          }
-        }
+# interval:
+#   - interval: 3s #Clearance Scan Time
+#     setup_priority: -400
+#     then:
+#       lambda: |-
+#         if ((time(NULL)-id(LD1125H_Last_Time))>id(LD1125H_Clear_Time).state) {
+#           if ((id(LD1125H_Clearence_Status) == false) || (id(LD1125H_Occupancy).state != "Clearance")) {
+#             id(LD1125H_Occupancy).publish_state("Clearance");
+#             id(LD1125H_Clearence_Status) = true;
+#           }
+          
+#             id(LD1125H_MovOcc_Binary).publish_state(false);
+          
+         
+#             id(LD1125H_Mov_Binary).publish_state(false);
+       
+#         }
 number:
   - platform: template
     name: ${upper_devicename} LD1125H mth1 #mth1 is 0~2.8m Sensitivity.
     id: LD1125H_mth1
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
     initial_value: "60.0" #Default mth1 Setting
     min_value: 10.0
@@ -125,11 +129,14 @@ number:
             data: !lambda |-
               std::string th1st = "mth1=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th1st.begin(), th1st.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"      
   - platform: template
     name: ${upper_devicename} LD1125H mth2 #mth2 is 2.8~8m Sensitivity.
     id: LD1125H_mth2
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
     initial_value: "55" #Default mth2 Setting
     min_value: 5
@@ -142,11 +149,14 @@ number:
             data: !lambda |-
               std::string th2st = "mth2=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th2st.begin(), th2st.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                          
   - platform: template
     name: ${upper_devicename} LD1125H mth3 #mth3 is above 8m Sensitivity.
     id: LD1125H_mth3
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
     initial_value: "40" #Default mth3 Setting
     min_value: 5
@@ -159,6 +169,8 @@ number:
             data: !lambda |-
               std::string th3st = "mth3=" + str_sprintf("%.0f",x) +"\r\n";
               return std::vector<uint8_t>(th3st.begin(), th3st.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                
   - platform: template
     name: ${upper_devicename} LD1125H rmax #rmax is max detection distance.
     id: LD1125H_rmax
@@ -176,6 +188,8 @@ number:
             data: !lambda |-
               std::string rmaxst = "rmax=" + str_sprintf("%.1f",x) +"\r\n";
               return std::vector<uint8_t>(rmaxst.begin(), rmaxst.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                
   - platform: template
     name: ${upper_devicename}Clearence Time
     id: LD1125H_Clear_Time
@@ -199,16 +213,17 @@ number:
 
 sensor:    
   #add by zhou begin bh1750
+  #pcb板套上外壳后，光感接收到的光是不一样的，需要根据自己的状况作曲线拟合。
   - platform: bh1750
     name: ${upper_devicename}Illuminance
     address: 0x23
-    # filters:
-    #   - calibrate_linear:
-    #       # Map 0.0 (from sensor) to 0.0 (true value)
-    #       - 0.0 -> 0.0
-    #       - 0.1 -> 7.6
-    #       - 4.6 -> 80.5
-    #       - 8.4 -> 136.1
+    filters:
+      - calibrate_linear:
+          # Map 0.0 (from sensor) to 0.0 (true value)
+          - 0.0 -> 0.0
+          - 0.7 -> 0.9
+          - 29 -> 64.4
+          - 56.3 -> 106.1 
     update_interval: 10s    
     
   - platform: aht10
@@ -237,27 +252,27 @@ sensor:
     icon: "mdi:signal-distance-variant"
     unit_of_measurement: "m"
     accuracy_decimals: 2
-    filters:    # Use Fliter To Debounce
-    # - sliding_window_moving_average:
-    #     window_size: 8
-    #     send_every: 2
-    - heartbeat: 0.2s
+    # filters:    # Use Fliter To Debounce
+    # # - sliding_window_moving_average:
+    # #     window_size: 8
+    # #     send_every: 2
+    # - heartbeat: 0.2s
   - platform: template
     name: ${upper_devicename}Still Target Distance
     id: LD1125H_Still_Distance
     icon: "mdi:signal-distance-variant"
     unit_of_measurement: "m"
     accuracy_decimals: 2
-    filters:    # Use Fliter To Debounce
-    # - sliding_window_moving_average:
-    #     window_size: 8
-    #     send_every: 2
-    - heartbeat: 0.2s    
+    # filters:    # Use Fliter To Debounce
+    # # - sliding_window_moving_average:
+    # #     window_size: 8
+    # #     send_every: 2
+    # - heartbeat: 0.2s    
 # # add and change by zhou end:     
 text_sensor:
   - platform: wifi_info
     ip_address:
-      name: ${upper_devicename} IP Address
+      name: ${upper_devicename}IP Address
     # ssid:
     #   name: ${upper_devicename} SSID
     # bssid:
@@ -266,10 +281,10 @@ text_sensor:
     #   name: ${upper_devicename} Mac Address
   - platform: serial
     uart_id: LD1125H_UART_BUS
-    name: ${upper_devicename}UART Text
+    name: ${upper_devicename}LD1125H UART Text
     id: LD1125H_UART_Text
     icon: "mdi:format-text"
-    internal: false #If Don't Want to See UART Receive Data, Set To True
+    internal: true #If Don't Want to See UART Receive Data, Set To True
     on_value:
       lambda: |-
         if (id(LD1125H_UART_Text).state.substr(0,3) == "occ") {
@@ -306,22 +321,53 @@ text_sensor:
             id(LD1125H_Clearence_Status) = false;
           }
         }
-        else if (id(LD1125H_UART_Text).state.substr(0,4) == "null") {
-          id(LD1125H_Moving_Distance).publish_state(atof("0.0"));
-          id(LD1125H_Still_Distance).publish_state(atof("0.0"));          
-          
-    
-          id(LD1125H_MovOcc_Binary).publish_state(false);
-          
-          id(LD1125H_Mov_Binary).publish_state(false);
-         
-          }      
-          
+        else if (id(LD1125H_UART_Text).state.substr(0,4) == "null") {    
+          if ((time(NULL)-id(LD1125H_Last_Time))>id(LD1125H_Clear_Time).state) {
+            if ((id(LD1125H_Clearence_Status) == false) || (id(LD1125H_Occupancy).state != "Clearance")) {
+              id(LD1125H_Occupancy).publish_state("Clearance");
+              id(LD1125H_Clearence_Status) = true;
+           }
+            
+              id(LD1125H_MovOcc_Binary).publish_state(false);
+            
+            
+               id(LD1125H_Mov_Binary).publish_state(false);
+          }
         
+        }  
+        else if (id(LD1125H_UART_Text).state.substr(0,7) == "mth1 is") {    
+          id(LD1125H_Tmth1).publish_state(id(LD1125H_UART_Text).state);      
+        }  
+        else if (id(LD1125H_UART_Text).state.substr(0,7) == "mth2 is") {    
+          id(LD1125H_Tmth2).publish_state(id(LD1125H_UART_Text).state); 
+        }
+        else if (id(LD1125H_UART_Text).state.substr(0,7) == "mth3 is") {    
+          id(LD1125H_Tmth3).publish_state(id(LD1125H_UART_Text).state);      
+        }    
+        else if (id(LD1125H_UART_Text).state.substr(0,7) == "rmax is") {    
+          id(LD1125H_Trmax).publish_state(id(LD1125H_UART_Text).state);      
+        }                                  
   - platform: template
     name: ${upper_devicename}Occupancy Status
     id: LD1125H_Occupancy
     icon: "mdi:motion-sensor"
+  - platform: template    
+    name: ${upper_devicename}Parameter
+    id: LD1125H_Prameter
+    icon: "mdi:information-variant"
+  - platform: template 
+    internal: true 
+    id: LD1125H_Tmth1
+  - platform: template
+    internal: true   
+    id: LD1125H_Tmth2    
+  - platform: template
+    internal: true   
+    id: LD1125H_Tmth3 
+  - platform: template
+    internal: true   
+    id: LD1125H_Trmax           
+
 binary_sensor:
   - platform: status
     name: ${upper_devicename} Status
@@ -341,6 +387,24 @@ binary_sensor:
 button: 
   - platform: restart
     name: ${upper_devicename}Restart      
+
+  - platform: template
+    id: get_all
+    name: ${upper_devicename}get_all_Par
+    icon: "mdi:information"
+    on_press:
+      - uart.write: "get_all\r\n"
+  
+      - lambda: |-
+           id(LD1125H_Prameter).publish_state(id(LD1125H_Tmth1).state + ","
+            + id(LD1125H_Tmth2).state+ "," + id(LD1125H_Tmth3).state+ "," + id(LD1125H_Trmax).state);
+
+  - platform: template
+    id: initial
+    name: ${upper_devicename}initial
+    icon: "mdi:restore-alert"
+    on_press:
+      - uart.write: "initial\r\n"          
 #设置测试模式开关，为了获取雷达信号强度值。turn-on 进入测试模式；turn-off 关闭测试模式。    
 switch:
   - platform: template

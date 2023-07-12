@@ -1,8 +1,9 @@
 
 #esp8266+cem5855H+bh1750,,增加了信号强度阀值参数th_in的设置
+
 substitutions:
-  devicename: "presence-espcem5855h-07" #Rename the device what you want.
-  upper_devicename: mRadar07 #Rename the device what you want.
+  devicename: presence-espcem5855h-07 #Rename the device what you want.
+  upper_devicename: mRadar07- #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1115H Initial Setting
@@ -24,9 +25,12 @@ esphome:
           data: !lambda |-
             std::string th_inst = "th_in=" + str_sprintf("%.0f",id(LD1115H_TH_IN).state) +" \n";
             return std::vector<uint8_t>(th_inst.begin(), th_inst.end());   
+      - delay: 100ms      
+      - uart.write: "save\r\n"                
 # add by zhou end                        
 esp8266:
   board: esp01_1m
+  restore_from_flash: True
   framework:
     version: latest
 external_components:
@@ -44,8 +48,8 @@ wifi:
   password: !secret wifi_password
   power_save_mode: NONE
   ap:
-    ssid: ${upper_devicename}CEM5855 Fallback Hotspot
-
+    ssid: ${upper_devicename}CEM5855F  Hotspot
+captive_portal:
 uart:
   id: LD1115H_UART_BUS
   rx_pin: GPIO3
@@ -88,31 +92,32 @@ i2c:
 #     inverted: false
 #web_server:   #Avoid Using Web Server To Prevent Hang
 #  port: 80
-interval:
-  - interval: 1s #Clearance Scan Time
-    setup_priority: -200
-    then:
-      lambda: |-
-        if ((time(NULL)-id(LD1115H_Last_Time))>id(LD1115H_Clear_Time).state) {
-          if ((id(LD1115H_Clearence_Status) == false) || (id(LD1115H_Occupancy).state != "Clearance")) {
-            id(LD1115H_Occupancy).publish_state("Clearance");
-            id(LD1115H_Clearence_Status) = true;
-          }
-          if (id(LD1115H_MovOcc_Binary).state == true) {
-            id(LD1115H_MovOcc_Binary).publish_state(false);
-          }
-          if (id(LD1115H_Mov_Binary).state == true) {
-            id(LD1115H_Mov_Binary).publish_state(false);
-          }
-        }
+# interval:
+#   - interval: 1s #Clearance Scan Time
+#     setup_priority: -200
+#     then:
+#       lambda: |-
+#         if ((time(NULL)-id(LD1115H_Last_Time))>id(LD1115H_Clear_Time).state) {
+#           if ((id(LD1115H_Clearence_Status) == false) || (id(LD1115H_Occupancy).state != "Clearance")) {
+#             id(LD1115H_Occupancy).publish_state("Clearance");
+#             id(LD1115H_Clearence_Status) = true;
+#           }
+#           if (id(LD1115H_MovOcc_Binary).state == true) {
+#             id(LD1115H_MovOcc_Binary).publish_state(false);
+#           }
+#           if (id(LD1115H_Mov_Binary).state == true) {
+#             id(LD1115H_Mov_Binary).publish_state(false);
+#           }
+#         }
 number:
   - platform: template
     name: ${upper_devicename} LD1115H TH1 #TH1 is Movement/Motion Sensitivity
     id: LD1115H_TH1
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
-    initial_value: "120" #Default TH1 Setting
+    initial_value: "130" #Default TH1 Setting
     min_value: 20
     max_value: 1200
     step: 10
@@ -123,11 +128,14 @@ number:
             data: !lambda |-
               std::string th1st = "th1=" + str_sprintf("%.0f",x) +" \n";
               return std::vector<uint8_t>(th1st.begin(), th1st.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                   
   - platform: template
     name: ${upper_devicename} LD1115H TH2 #TH2 is Occupancy/Presence Sensitivity
     id: LD1115H_TH2
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
     initial_value: "250" #Default TH2 Setting
     min_value: 50
@@ -140,12 +148,15 @@ number:
             data: !lambda |-
               std::string th2st = "th2=" + str_sprintf("%.0f",x) +" \n";
               return std::vector<uint8_t>(th2st.begin(), th2st.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                   
 # add by zhou begin: th_in 另加设置信号强度阀值
   - platform: template
     name: ${upper_devicename} LD1115H TH_IN #TH_IN is Threshold Value of Re-trigger
     id: LD1115H_TH_IN
     icon: "mdi:cogs"
     optimistic: true
+    mode: box
     restore_value: true #If you don't want to store the setting at ESP, set it to false.
     initial_value: "260" #Default TH_IN Setting
     min_value: 50
@@ -158,9 +169,11 @@ number:
             data: !lambda |-
               std::string th_inst = "th_in=" + str_sprintf("%.0f",x) +" \n";
               return std::vector<uint8_t>(th_inst.begin(), th_inst.end());
+        - delay: 100ms      
+        - uart.write: "save\r\n"                   
 # end by zhou                                      
   - platform: template
-    name: ${upper_devicename} LD1115H Clearence Time
+    name: ${upper_devicename}Clearence Time
     id: LD1115H_Clear_Time
     icon: "mdi:cogs"
     optimistic: true
@@ -170,7 +183,7 @@ number:
     max_value: 20
     step: 0.5
   - platform: template
-    name: ${upper_devicename} LD1115H Movement Time
+    name: ${upper_devicename}Movement Time
     id: LD1115H_Mov_Time
     icon: "mdi:cogs"
     optimistic: true
@@ -182,16 +195,24 @@ number:
 sensor:
   #add by zhou begin bh1750
   - platform: bh1750
-    name: ${upper_devicename} Illuminance
+    name: ${upper_devicename}Illuminance
     address: 0x23
+    filters:
+      - calibrate_linear:
+          # Map 0.0 (from sensor) to 0.0 (true value)
+          - 0.0 -> 0.0
+          - 0.8 -> 1.1
+          - 11.4 -> 16.1
+          - 54.7 -> 69.4
+
     update_interval: 10s    
   #add by zhou end
         
   - platform: wifi_signal
     name: ${upper_devicename} WiFi Signal
     update_interval: 60s
-  - platform: uptime
-    name: ${upper_devicename} Uptime
+  # - platform: uptime
+  #   name: ${upper_devicename} Uptime
   - platform: template
     name: ${upper_devicename} LD1115H Spectral line
     id: LD1115H_Spectral
@@ -200,7 +221,7 @@ sensor:
     unit_of_measurement: ""
     accuracy_decimals: 0
   - platform: template
-    name: ${upper_devicename} LD1115H Signal Strength
+    name: ${upper_devicename}Signal Strength
     id: LD1115H_Signal
     icon: "mdi:signal-distance-variant"
     unit_of_measurement: ""
@@ -222,7 +243,7 @@ text_sensor:
     #   name: ${upper_devicename} Mac Address
   - platform: serial
     uart_id: LD1115H_UART_BUS
-    name: ${upper_devicename} LD1115H UART Text
+    name: ${upper_devicename}CEM5855H UART Text
     id: LD1115H_UART_Text
     icon: "mdi:format-text"
     internal: true #If Don't Want to See UART Receive Data, Set To True
@@ -264,19 +285,56 @@ text_sensor:
             id(LD1115H_Clearence_Status) = false;
           }
         }
+        else if (id(LD1115H_UART_Text).state.substr(0,4) == "null") {    
+          if ((time(NULL)-id(LD1115H_Last_Time))>id(LD1115H_Clear_Time).state) {
+            if ((id(LD1115H_Clearence_Status) == false) || (id(LD1115H_Occupancy).state != "Clearance")) {
+              id(LD1115H_Occupancy).publish_state("Clearance");
+              id(LD1115H_Clearence_Status) = true;
+           }
+            
+              id(LD1115H_MovOcc_Binary).publish_state(false);
+            
+            
+               id(LD1115H_Mov_Binary).publish_state(false);
+          }
+        }  
+
+        else if (id(LD1115H_UART_Text).state.substr(0,6) == "th1 is") {    
+          id(LD1115H_Tth1).publish_state(id(LD1115H_UART_Text).state);      
+        }  
+        else if (id(LD1115H_UART_Text).state.substr(0,6) == "th2 is") {    
+          id(LD1115H_Tth2).publish_state(id(LD1115H_UART_Text).state); 
+        }
+        else if (id(LD1115H_UART_Text).state.substr(0,8) == "th_in is") {    
+          id(LD1115H_Tth_in).publish_state(id(LD1115H_UART_Text).state);      
+        }    
+        
   - platform: template
-    name: ${upper_devicename} LD1115H Occupancy Status
+    name: ${upper_devicename}Occupancy Status
     id: LD1115H_Occupancy
     icon: "mdi:motion-sensor"
+  - platform: template    
+    name: ${upper_devicename}Parameter
+    id: LD1115H_Prameter
+    icon: "mdi:information-variant"
+  - platform: template 
+    internal: true 
+    id: LD1115H_Tth1
+  - platform: template
+    internal: true   
+    id: LD1115H_Tth2    
+  - platform: template
+    internal: true   
+    id: LD1115H_Tth_in  
 binary_sensor:
   - platform: status
     name: ${upper_devicename} Status
   - platform: template
-    name: ${upper_devicename} LD1115H Occupancy or Movement
+    name: ${upper_devicename}OccOrMov
     id: LD1115H_MovOcc_Binary
     device_class: occupancy
   - platform: template
-    name: ${upper_devicename} LD1115H Movement
+    name: ${upper_devicename}Movement
     id: LD1115H_Mov_Binary
     device_class: motion
 
@@ -289,3 +347,24 @@ binary_sensor:
     name: ${upper_devicename}human_presence
     device_class: presence
 #add by zhou end 
+button: 
+  - platform: restart
+    name: ${upper_devicename}Restart      
+
+  - platform: template
+    id: get_all
+    name: ${upper_devicename}get_all_Par
+    icon: "mdi:information"
+    on_press:
+      - uart.write: "get_all\r\n"
+  
+      - lambda: |-
+           id(LD1115H_Prameter).publish_state(id(LD1115H_Tth1).state + ","
+            + id(LD1115H_Tth2).state+ "," + id(LD1115H_Tth_in).state);
+
+  - platform: template
+    id: initial
+    name: ${upper_devicename}initial
+    icon: "mdi:restore-alert"
+    on_press:
+      - uart.write: "initial\r\n"          
