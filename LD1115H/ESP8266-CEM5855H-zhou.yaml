@@ -1,13 +1,12 @@
 
-#esp8266+cem5855H+bh1750,,增加了信号强度阀值参数th_in的设置
-
+#esp8266+cem5855H+bh1750
 substitutions:
   devicename: presence-espcem5855h-07 #Rename the device what you want.
   upper_devicename: mRadar07- #Rename the device what you want.
 esphome:
   name: $devicename
   on_boot:    #LD1115H Initial Setting
-    priority: -200
+    priority: -600
     then:
       - uart.write:
           id: LD1115H_UART_BUS
@@ -58,7 +57,7 @@ uart:
   data_bits: 8
   stop_bits: 1
   parity: NONE
-  setup_priority: 200 #Set Priority To Prevent Boot Loop or Fail
+  #setup_priority: 200 #Set Priority To Prevent Boot Loop or Fail
 #  debug:
 #    direction: BOTH
 #    dummy_receiver: false
